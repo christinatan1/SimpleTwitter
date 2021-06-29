@@ -46,6 +46,7 @@ public class LoginActivity extends OAuthLoginActionBarActivity<TwitterClient> {
 	@Override
 	public void onLoginSuccess() {
 		Log.i("kjlkjl", "login success");
+		// communicates info to TimelineActivity
 		Intent i = new Intent(this, TimelineActivity.class);
 		startActivity(i);
 	}
@@ -54,6 +55,7 @@ public class LoginActivity extends OAuthLoginActionBarActivity<TwitterClient> {
 	// i.e Display an error dialog or toast
 	@Override
 	public void onLoginFailure(Exception e) {
+//		Log.i("kjlkjl", "login failure");
 		e.printStackTrace();
 	}
 
