@@ -41,6 +41,10 @@ public class TimelineActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+//        getSupportActionBar().setDisplayShowHomeEnabled(true);
+//        getSupportActionBar().setLogo(R.drawable.ic_launcher_twitter);
+//        getSupportActionBar().setDisplayUseLogoEnabled(true);
+
         // Only ever call `setContentView` once right at the top
         setContentView(R.layout.activity_timeline);
 
