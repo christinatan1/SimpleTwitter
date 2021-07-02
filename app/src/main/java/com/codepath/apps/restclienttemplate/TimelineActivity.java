@@ -29,6 +29,7 @@ import okhttp3.Headers;
 
 public class TimelineActivity extends AppCompatActivity {
     private SwipeRefreshLayout swipeContainer;
+    private EndlessRecyclerViewScrollListener scrollListener;
 
     public static final String TAG = "TimelineActivity";
     private final int REQUEST_CODE = 20;
@@ -38,12 +39,10 @@ public class TimelineActivity extends AppCompatActivity {
     List<Tweet> tweets;
     TweetsAdapter adapter;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        getSupportActionBar().setDisplayShowHomeEnabled(true);
-//        getSupportActionBar().setLogo(R.drawable.ic_launcher_twitter);
-//        getSupportActionBar().setDisplayUseLogoEnabled(true);
 
         // Only ever call `setContentView` once right at the top
         setContentView(R.layout.activity_timeline);
@@ -55,9 +54,6 @@ public class TimelineActivity extends AppCompatActivity {
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                // Your code to refresh the list here.
-                // Make sure you call swipeContainer.setRefreshing(false)
-                // once the network request has completed successfully.
                 fetchTimelineAsync(0);
             }
         });
@@ -78,7 +74,20 @@ public class TimelineActivity extends AppCompatActivity {
         adapter = new TweetsAdapter(this, tweets);
 
         // recycler view setup: layout manager and adapter
-        rvTweets.setLayoutManager(new LinearLayoutManager(this));
+//        rvTweets.setLayoutManager(new LinearLayoutManager(this));
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        rvTweets.setLayoutManager(linearLayoutManager);
+
+        scrollListener = new EndlessRecyclerViewScrollListener(linearLayoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                // Triggered only when new data needs to be appended to the list
+                // Add whatever code is needed to append new items to the bottom of the list
+                loadMoreData();
+            }
+        };
+        rvTweets.addOnScrollListener(scrollListener);
+
         rvTweets.setAdapter(adapter);
 
         populateHomeTimeline();
@@ -168,6 +177,7 @@ public class TimelineActivity extends AppCompatActivity {
                 try {
                     adapter.addAll(Tweet.fromJsonArray(jsonArray));
                     adapter.notifyDataSetChanged();
+                    scrollListener.resetState();
                 } catch (JSONException e) {
                     Log.e(TAG, "Json exception", e);
                 }
@@ -180,4 +190,26 @@ public class TimelineActivity extends AppCompatActivity {
             }
         });
     }
+
+    private void loadMoreData(){
+        client.getNextPage(new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Headers headers, JSON json) {
+                JSONArray jsonArray = json.jsonArray;
+                try {
+                    adapter.addAll(Tweet.fromJsonArray(jsonArray));
+                    adapter.notifyDataSetChanged();
+                } catch (JSONException e) {
+                    Log.e(TAG, "Json exception", e);
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Headers headers, String response, Throwable throwable) {
+                Log.d("DEBUG", "Fetch timeline error: " + throwable.toString());
+            }
+        }, tweets.get(tweets.size()-1).id);
+    }
 }
+
+//
